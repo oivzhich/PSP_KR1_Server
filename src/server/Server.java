@@ -22,7 +22,7 @@ public class Server {
      * @return - процент налога
      */
     private static Integer getTaxPercentage(final int salary) {
-        if (salary <= 1000) {
+        if (salary <= 100000) {
             return 5;
         } else if (salary <= 500000) {
             return 10;
