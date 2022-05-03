@@ -15,6 +15,29 @@ import java.net.Socket;
  * для з/п больше 500 000 – ставка 15 %.
  */
 public class Server {
+
+    /***
+     * Метод вычисляет, какую сумму налога необходимо применить к зарплане
+     * @param salary - зарплата сотрудника
+     * @return - процент налога
+     */
+    private static Integer getTaxPercentage(final int salary) {
+        if (salary <= 1000) {
+            return 5;
+        } else if (salary <= 500000) {
+            return 10;
+        } else return 15;
+    }
+
+    /***
+     * Метод высчитывает сумму подоходного налога сотрудника
+     * @param salary - зарплата сотрудника
+     * @return - сумма подохдного налога
+     */
+    private static Integer calculateEmployeeSalaryTax(final Integer salary) {
+        return (salary * getTaxPercentage(salary)) / 100;
+    }
+
     public static void main(String[] args) {
         //объявление объекта класса ServerSocket
         ServerSocket serverSocket = null;
@@ -26,13 +49,13 @@ public class Server {
         ObjectOutputStream soos = null;
 
         try {
-            System.out.println("Server starting....");
+            System.out.println("Сервер запущен....");
             //создание сокета сервера для //заданного порта
             serverSocket = new ServerSocket(2525);
 
             //выполнение метода, который //обеспечивает реальное подключение сервера к клиенту
             clientAccepted = serverSocket.accept();
-            System.out.println("connection established....");
+            System.out.println("Соединение с клиентом установлено....");
 
             //создание потока ввода
             sois = new ObjectInputStream(clientAccepted.getInputStream());
@@ -45,14 +68,25 @@ public class Server {
 
             //выполнениецикла: пока строка не будет равна «quite»
             while (!clientMessageRecieved.equals("quite")) {
-                System.out.println("message received: '" + clientMessageRecieved + "'");
-                //приведение символов строки к верхнему регистру
-                clientMessageRecieved = clientMessageRecieved.toUpperCase();
+                System.out.printf("Сообщение от клиента: '%s'%n", clientMessageRecieved);
+
+                String messageToClient;
+                try {
+                    //преобразовываем строку, полученную с клинета в тип Ingeger
+                    Integer employeeSalary = Integer.parseInt(clientMessageRecieved);
+                    //Вычисляем сумму подоходного налога
+                    messageToClient = String.valueOf(calculateEmployeeSalaryTax(employeeSalary));
+                } catch (NumberFormatException e) {
+                    messageToClient = "Вы ввели не правильную зарплату. Пожалуйста ввведите натуральное число";
+                }
+
                 //потокувывода присваивается значение строковой переменной (передается клиенту)
-                soos.writeObject(clientMessageRecieved);
+                soos.writeObject(messageToClient);
                 //строке присваиваются данные потока ввода, представленные в виде строки (передано клиентом)
                 clientMessageRecieved = (String) sois.readObject();
             }
+
+            System.out.println("Соедиенение с клиентом разорвано....");
 
         } catch (Exception e) {
             e.printStackTrace();
